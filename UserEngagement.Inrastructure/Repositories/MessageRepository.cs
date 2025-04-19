@@ -22,7 +22,9 @@ public class MessageRepository : IMessageRepository
     }
 
     public async Task<Message?> GetMessageByIdAsync(long messageId, CancellationToken cancellationToken)
-    => await _dbContext.Set<Message>()
-        .AsNoTracking()
-        .FirstOrDefaultAsync(cer => cer.Id == messageId, cancellationToken);
+    {
+        return await _dbContext.Set<Message>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(message => message.Id == messageId, cancellationToken);
+    }
 }

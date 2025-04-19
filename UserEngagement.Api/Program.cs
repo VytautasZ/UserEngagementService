@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using System.Reflection;
 using UserEngagement.Application.DependencyInjection;
 using UserEngagement.Application.Extensions;
@@ -7,7 +8,7 @@ ConfigurationManager config = builder.Configuration;
 
 builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
-builder.Services.AddApiVersioning();
+builder.Services.AddApiVersioning(options => options.DefaultApiVersion = new ApiVersion(1, 0));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(swagger =>
 {

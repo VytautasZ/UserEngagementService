@@ -4,6 +4,8 @@ using Swashbuckle.AspNetCore.Annotations;
 using UserEngagement.Api.Contracts;
 using UserEngagement.Api.Mapping;
 using UserEngagement.Application.Commands;
+using UserEngagement.Application.Queries;
+using UserEngagement.Core.Domain;
 using UserEngagement.Core.Interfaces;
 
 namespace UserEngagement.Api.Controllers;
@@ -51,7 +53,7 @@ public sealed class UserMessagesController : ControllerBase
     /// <response code="500">If an unexpected error occurs</response>
     [HttpPost(Name = ApiRoutes.UserMessages.SEND_MESSAGE_TO_USER)]
     [SwaggerOperation(Tags = new[] { SWAGGER_GROUP })]
-    [ProducesResponseType(typeof(MessageDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(MessageBaseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status403Forbidden)]
@@ -60,17 +62,56 @@ public sealed class UserMessagesController : ControllerBase
     [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status415UnsupportedMediaType)]
     [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<MessageDto>> SentMessageToUserAsync(
-        [FromBody] MessageDto messageDto, CancellationToken cancellation)
+    public async Task<ActionResult<MessageBaseDto>> SentMessageToUserAsync([FromBody] MessageBaseDto messageBaseDto, CancellationToken cancellation = default)
     {
         var command = new SendMessageCommand()
         {
-            Message = messageDto.ToMessage()
+            Message = messageBaseDto.ToMessage()
         };
 
-        var message = await _commandDispatcher.Dispatch<SendMessageCommand, long>(command, cancellation);
+        var messageId = await _commandDispatcher.Dispatch<SendMessageCommand, long>(command, cancellation);
 
-        return CreatedAtAction(ApiRoutes.UserMessages.GET_MESSAGE_BY_ID,
-            new { messageId = message });
+        return CreatedAtAction(ApiRoutes.UserMessages.GET_MESSAGE_BY_ID, new { messageId = messageId }, messageBaseDto);
+    }
+    /// <summary>
+    /// Get a message sent to the user by message ID.
+    /// </summary>
+    /// <param name="messageId">The unique identifier of the user message.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the request.</param>
+    /// <remarks>
+    /// **Sample request:**
+    ///     GET /api/v1/user-messages/123
+    /// </remarks>
+    /// <response code="200">Returns the message details</response>
+    /// <response code="401">If authentication is missing or invalid</response>
+    /// <response code="403">If the user is not authorized to access the resource</response>
+    /// <response code="404">If the message with the given ID does not exist</response>
+    /// <response code="406">If the requested media type is not supported</response>
+    /// <response code="415">If the request's media type is not supported</response>
+    /// <response code="500">If an unexpected server error occurs</response>
+    [HttpGet("{messageId}", Name = ApiRoutes.UserMessages.GET_MESSAGE_BY_ID)]
+    [SwaggerOperation(Tags = [SWAGGER_GROUP])]
+    [ProducesResponseType(typeof(MessageDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status406NotAcceptable)]
+    [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status415UnsupportedMediaType)]
+    [ProducesResponseType(typeof(NoContentDto), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<MessageDto>> GetMessageById([FromRoute] long messageId, CancellationToken cancellationToken = default)
+    {
+        var query = new GetMessageByIdQuery()
+        {
+            MessageId = messageId
+        };
+
+        var message = await _queryDispatcher.Dispatch<GetMessageByIdQuery, Message>(query, cancellationToken);
+        
+        if(message == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(message!.ToMessageDto());
     }
 }

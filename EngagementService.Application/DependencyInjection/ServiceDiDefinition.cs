@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using UserEngagement.Application.Commands;
 using UserEngagement.Application.Dispatchers;
+using UserEngagement.Application.Queries;
+using UserEngagement.Core.Domain;
 using UserEngagement.Core.Interfaces;
 using UserEngagement.Infrastructure.Interfaces;
 using UserEngagement.Infrastructure.NotificationServices;
@@ -18,6 +20,7 @@ public static class ServiceDiDefinition
         services.AddTransient<IUserContacService, UserContactsService>();
 
         services.AddScoped<ICommandHandler<SendMessageCommand, long>, SendMessageCommandHandler>();
+        services.AddScoped<IQueryHandler<GetMessageByIdQuery, Message>, GetMessageByIdQueryHandler>();
 
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ISmsService, SmsService>();

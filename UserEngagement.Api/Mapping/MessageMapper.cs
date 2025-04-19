@@ -5,7 +5,7 @@ namespace UserEngagement.Api.Mapping;
 
 public static class MessageMapper
 {
-    public static Message ToMessage(this MessageDto messageDto)
+    public static Message ToMessage(this MessageBaseDto messageDto)
     {
         return new()
         {
