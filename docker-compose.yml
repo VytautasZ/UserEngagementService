@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  userengagement.api:
+    build:
+      context: .
+      dockerfile: UserEngagement.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - sqlserver
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__UserEngagementDbString: Server=sqlserver,1433;Initial Catalog=user-engagement;User Id=sa;Password=@test123;Integrated Security=False;TrustServerCertificate=True
+      ConnectionStrings__JobManagementDbString: Server=sqlserver,1433;Initial Catalog=hangfire-management;User Id=sa;Password=@test123;Integrated Security=False;TrustServerCertificate=True
+    networks:
+      - userengagement-network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    ports:
+      - "1439:1433"
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: "@test123"
+    networks:
+      - userengagement-network
+    volumes:
+      - sql_data:/var/opt/mssql
+
+networks:
+  userengagement-network:
+
+volumes:
+  sql_data:

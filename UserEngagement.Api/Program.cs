@@ -3,8 +3,9 @@ using UserEngagement.Application.DependencyInjection;
 using UserEngagement.Application.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
 ConfigurationManager config = builder.Configuration;
+
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddApiVersioning();
 builder.Services.AddEndpointsApiExplorer();
@@ -12,7 +13,10 @@ builder.Services.AddSwaggerGen(swagger =>
 {
     string? xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    swagger.IncludeXmlComments(xmlPath);
+    if (File.Exists(xmlPath))
+    {
+        swagger.IncludeXmlComments(xmlPath);
+    }
 });
 builder.Services.AddServiceDependencies();
 builder.Services.AddRepositoryDependencies();
@@ -31,5 +35,6 @@ if (app.Environment.IsDevelopment())
 
 app.MapSwagger();
 app.MapControllers();
-await app.UseDatabases();
+await app.UseDatabasesAsync();
+app.MapHealthChecks("/health");
 app.Run();

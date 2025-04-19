@@ -8,8 +8,8 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>    
   
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DocumentationFile>bin\Debug\net8.0\UserEngagement.Api.xml</DocumentationFile>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Development' ">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>1701;1702,1591</NoWarn>
   </PropertyGroup>
 	
